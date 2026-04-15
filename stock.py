@@ -1,8 +1,5 @@
 # stock.py - 미국 증시 데이터 수집
 
-import time
-import requests
-import pandas as pd
 import yfinance as yf
 
 # ── 관심 종목 (자유롭게 수정) ──────────────────────────────────────
@@ -24,7 +21,34 @@ INDICES = [
     ("^GSPC", "S&P500"),
 ]
 
-SP500_WIKI = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
+# ── S&P500 주요 150개 (Wikipedia 매번 조회 대신 하드코딩) ──────────
+# 시가총액 상위 + 섹터별 대표주 위주 — 변동성 큰 종목이 모버에 잘 잡힘
+SP500_TICKERS = [
+    # 빅테크
+    "AAPL","MSFT","NVDA","AMZN","GOOGL","GOOG","META","TSLA","AVGO","ORCL",
+    "ADBE","CRM","INTC","AMD","QCOM","TXN","NOW","SNOW","PANW","CRWD",
+    # 금융
+    "BRK-B","JPM","V","MA","BAC","WFC","GS","MS","AXP","BLK",
+    "SCHW","C","USB","PNC","TFC","COF","ICE","CME","CB","MMC",
+    # 헬스케어
+    "LLY","UNH","JNJ","ABBV","MRK","TMO","ABT","DHR","AMGN","BMY",
+    "GILD","ISRG","SYK","ELV","HUM","CVS","CI","BSX","VRTX","REGN",
+    # 소비재/유통
+    "WMT","HD","COST","MCD","NKE","SBUX","TGT","LOW","TJX","BKNG",
+    "MAR","HLT","ABNB","EBAY","ETSY","ROST","DG","DLTR","YUM","CMG",
+    # 에너지
+    "XOM","CVX","COP","EOG","SLB","MPC","PSX","VLO","OXY","PXD",
+    # 산업재
+    "CAT","DE","BA","HON","UNP","RTX","LMT","GE","MMM","EMR",
+    "ETN","PH","ROK","ITW","GD","NOC","HII","TDG","CARR","OTIS",
+    # 통신/미디어
+    "NFLX","DIS","CMCSA","T","VZ","TMUS","WBD","PARA","EA","TTWO",
+    # 유틸리티/부동산
+    "NEE","DUK","SO","D","AEP","EXC","PLD","AMT","EQIX","CCI",
+    # 기타 성장주
+    "UBER","LYFT","ABNB","DASH","COIN","HOOD","DDOG","SNOW","MDB","ZS",
+    "GTLB","BILL","HUBS","TTD","APP","RBLX","U","MELI","SE","GRAB",
+]
 
 
 # ── 유틸 ─────────────────────────────────────────────────────────
@@ -37,31 +61,26 @@ def _sign(val: float) -> str:
     return "+" if val >= 0 else ""
 
 
-def _batch_pct(tickers: list[str], retries: int = 3) -> dict[str, float]:
+def _batch_pct(tickers: list[str]) -> dict[str, float]:
     """여러 티커를 한 번에 다운로드해 등락률 딕셔너리 반환"""
-    for attempt in range(retries):
-        try:
-            data = yf.download(
-                tickers, period="2d", group_by="ticker",
-                auto_adjust=True, progress=False, threads=True,
-            )
-            result = {}
-            for t in tickers:
-                try:
-                    close = data[(t, "Close")].dropna()
-                    if len(close) < 2:
-                        continue
-                    pct = (close.iloc[-1] - close.iloc[-2]) / close.iloc[-2] * 100
-                    result[t] = float(pct)
-                except Exception:
-                    pass
-            if result:
-                return result
-        except Exception:
-            pass
-        if attempt < retries - 1:
-            time.sleep(2)
-    return {}
+    try:
+        data = yf.download(
+            tickers, period="2d", group_by="ticker",
+            auto_adjust=True, progress=False, threads=True,
+        )
+        result = {}
+        for t in tickers:
+            try:
+                close = data[(t, "Close")].dropna()
+                if len(close) < 2:
+                    continue
+                pct = (close.iloc[-1] - close.iloc[-2]) / close.iloc[-2] * 100
+                result[t] = float(pct)
+            except Exception:
+                pass
+        return result
+    except Exception:
+        return {}
 
 
 def _single_hist(ticker: str, retries: int = 3):
@@ -72,8 +91,6 @@ def _single_hist(ticker: str, retries: int = 3):
                 return hist
         except Exception:
             pass
-        if attempt < retries - 1:
-            time.sleep(2)
     return None
 
 
@@ -99,16 +116,9 @@ def _section_indices() -> str:
 
 # ── 섹션 2: S&P500 상위/하위 5개 ──────────────────────────────────
 
-def _get_sp500_tickers() -> list[str]:
-    r = requests.get(SP500_WIKI, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
-    tbl = pd.read_html(r.text, flavor="lxml")[0]
-    return tbl["Symbol"].str.replace(".", "-", regex=False).tolist()
-
-
 def _section_movers() -> str:
     try:
-        tickers = _get_sp500_tickers()
-        pct_map = _batch_pct(tickers)
+        pct_map = _batch_pct(SP500_TICKERS)
         if not pct_map:
             return "🏆 S&P500 등락 상위/하위\n  데이터 없음"
 
