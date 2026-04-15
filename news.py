@@ -1,13 +1,35 @@
-# news.py - 경제/증시 뉴스 수집
-# 대상: Reuters, Bloomberg RSS, Yahoo Finance 뉴스 등
+# news.py - 경제 뉴스 수집 (RSS)
 
 import feedparser
 
+RSS_FEEDS = [
+    "https://www.hankyung.com/feed/economy",
+    "https://rss.donga.com/economy.xml",
+]
+
+MAX_ARTICLES = 5
+
 
 def get_news_summary() -> str:
-    """주요 경제 뉴스 헤드라인을 수집하여 포맷된 문자열 반환"""
-    # TODO: RSS 피드 URL 목록 정의
-    # TODO: feedparser로 최신 뉴스 헤드라인 파싱
-    # TODO: 상위 N개 기사 선택 및 요약
-    # TODO: 포맷된 리포트 문자열 생성
-    pass
+    articles = []
+
+    for url in RSS_FEEDS:
+        feed = feedparser.parse(url)
+        for entry in feed.entries:
+            title = entry.get("title", "").strip()
+            link  = entry.get("link", "").strip()
+            if title and link:
+                articles.append((title, link))
+            if len(articles) >= MAX_ARTICLES:
+                break
+        if len(articles) >= MAX_ARTICLES:
+            break
+
+    if not articles:
+        return "📰 오늘의 주요 뉴스\n뉴스를 불러오지 못했습니다."
+
+    lines = ["📰 오늘의 주요 뉴스"]
+    for i, (title, link) in enumerate(articles, 1):
+        lines.append(f"{i}. {title}\n   {link}")
+
+    return "\n".join(lines)

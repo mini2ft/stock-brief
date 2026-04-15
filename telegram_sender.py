@@ -5,11 +5,13 @@ import os
 import requests
 from dotenv import load_dotenv
 
-load_dotenv()  # 로컬에서는 .env 로드, Actions에서는 이미 env에 주입되어 있어 무해
+load_dotenv()
 
 
 def send_message(text: str) -> None:
-    """텔레그램 봇으로 메시지 전송"""
-    # TODO: Telegram Bot API 호출 (sendMessage)
-    # TODO: 전송 실패 시 에러 로깅
-    pass
+    token   = os.getenv("TELEGRAM_BOT_TOKEN")
+    chat_id = os.getenv("TELEGRAM_CHAT_ID")
+
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    res = requests.post(url, json={"chat_id": chat_id, "text": text})
+    res.raise_for_status()
