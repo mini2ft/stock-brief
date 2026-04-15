@@ -39,7 +39,7 @@ def build_message() -> str:
     divider = "─" * 20
 
     return "\n".join([
-        f"📅 {date_str} 굿모닝 🌅",
+        f"📅 {date_str} 둥근 해가 떴다 🍀",
         divider,
         stock,
         divider,
