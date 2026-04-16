@@ -51,6 +51,66 @@ SP500_TICKERS = [
 ]
 
 
+# ── 티커 → 회사명 매핑 ────────────────────────────────────────────
+COMPANY_NAMES = {
+    # 빅테크
+    "AAPL": "Apple", "MSFT": "Microsoft", "NVDA": "Nvidia", "AMZN": "Amazon",
+    "GOOGL": "Alphabet", "GOOG": "Alphabet", "META": "Meta", "TSLA": "Tesla",
+    "AVGO": "Broadcom", "ORCL": "Oracle", "ADBE": "Adobe", "CRM": "Salesforce",
+    "INTC": "Intel", "AMD": "AMD", "QCOM": "Qualcomm", "TXN": "Texas Instruments",
+    "NOW": "ServiceNow", "SNOW": "Snowflake", "PANW": "Palo Alto", "CRWD": "CrowdStrike",
+    # 금융
+    "BRK-B": "Berkshire", "JPM": "JPMorgan", "V": "Visa", "MA": "Mastercard",
+    "BAC": "Bank of America", "WFC": "Wells Fargo", "GS": "Goldman Sachs",
+    "MS": "Morgan Stanley", "AXP": "Amex", "BLK": "BlackRock",
+    "SCHW": "Schwab", "C": "Citigroup", "USB": "US Bancorp", "PNC": "PNC",
+    "TFC": "Truist", "COF": "Capital One", "ICE": "ICE", "CME": "CME Group",
+    "CB": "Chubb", "MMC": "Marsh McLennan",
+    # 헬스케어
+    "LLY": "Eli Lilly", "UNH": "UnitedHealth", "JNJ": "J&J", "ABBV": "AbbVie",
+    "MRK": "Merck", "TMO": "Thermo Fisher", "ABT": "Abbott", "DHR": "Danaher",
+    "AMGN": "Amgen", "BMY": "Bristol-Myers", "GILD": "Gilead", "ISRG": "Intuitive",
+    "SYK": "Stryker", "ELV": "Elevance", "HUM": "Humana", "CVS": "CVS Health",
+    "CI": "Cigna", "BSX": "Boston Scientific", "VRTX": "Vertex", "REGN": "Regeneron",
+    # 소비재/유통
+    "WMT": "Walmart", "HD": "Home Depot", "COST": "Costco", "MCD": "McDonald's",
+    "NKE": "Nike", "SBUX": "Starbucks", "TGT": "Target", "LOW": "Lowe's",
+    "TJX": "TJX", "BKNG": "Booking", "MAR": "Marriott", "HLT": "Hilton",
+    "ABNB": "Airbnb", "EBAY": "eBay", "ETSY": "Etsy", "ROST": "Ross Stores",
+    "DG": "Dollar General", "DLTR": "Dollar Tree", "YUM": "Yum Brands", "CMG": "Chipotle",
+    # 에너지
+    "XOM": "ExxonMobil", "CVX": "Chevron", "COP": "ConocoPhillips", "EOG": "EOG Resources",
+    "SLB": "SLB", "MPC": "Marathon Pete.", "PSX": "Phillips 66",
+    "VLO": "Valero", "OXY": "Occidental", "PXD": "Pioneer Natural",
+    # 산업재
+    "CAT": "Caterpillar", "DE": "John Deere", "BA": "Boeing", "HON": "Honeywell",
+    "UNP": "Union Pacific", "RTX": "RTX", "LMT": "Lockheed", "GE": "GE",
+    "MMM": "3M", "EMR": "Emerson", "ETN": "Eaton", "PH": "Parker Hannifin",
+    "ROK": "Rockwell", "ITW": "Illinois Tool", "GD": "General Dynamics",
+    "NOC": "Northrop", "HII": "Huntington", "TDG": "TransDigm",
+    "CARR": "Carrier", "OTIS": "Otis",
+    # 통신/미디어
+    "NFLX": "Netflix", "DIS": "Disney", "CMCSA": "Comcast", "T": "AT&T",
+    "VZ": "Verizon", "TMUS": "T-Mobile", "WBD": "Warner Bros.", "PARA": "Paramount",
+    "EA": "EA", "TTWO": "Take-Two",
+    # 유틸리티/부동산
+    "NEE": "NextEra", "DUK": "Duke Energy", "SO": "Southern Co.", "D": "Dominion",
+    "AEP": "AEP", "EXC": "Exelon", "PLD": "Prologis", "AMT": "American Tower",
+    "EQIX": "Equinix", "CCI": "Crown Castle",
+    # 기타 성장주
+    "UBER": "Uber", "LYFT": "Lyft", "DASH": "DoorDash", "COIN": "Coinbase",
+    "HOOD": "Robinhood", "DDOG": "Datadog", "MDB": "MongoDB", "ZS": "Zscaler",
+    "GTLB": "GitLab", "BILL": "Bill.com", "HUBS": "HubSpot", "TTD": "Trade Desk",
+    "APP": "AppLovin", "RBLX": "Roblox", "U": "Unity", "MELI": "MercadoLibre",
+    "SE": "Sea Ltd.", "GRAB": "Grab",
+}
+
+
+def _company(ticker: str) -> str:
+    """티커에 해당하는 회사명 반환. 없으면 빈 문자열."""
+    return COMPANY_NAMES.get(ticker, "")
+
+
 # ── 유틸 ─────────────────────────────────────────────────────────
 
 def _emoji(change: float) -> str:
@@ -129,10 +189,14 @@ def _section_movers() -> str:
         lines = ["🏆 S&P500 당일 등락"]
         lines.append("  ▲ 상승 TOP 5")
         for t, pct in top5:
-            lines.append(f"    📈 {t}: {_sign(pct)}{pct:.2f}%")
+            name = _company(t)
+            label = f"{t} ({name})" if name else t
+            lines.append(f"    📈 {label}: {_sign(pct)}{pct:.2f}%")
         lines.append("  ▼ 하락 TOP 5")
         for t, pct in bot5:
-            lines.append(f"    📉 {t}: {pct:.2f}%")
+            name = _company(t)
+            label = f"{t} ({name})" if name else t
+            lines.append(f"    📉 {label}: {pct:.2f}%")
         return "\n".join(lines)
     except Exception as e:
         return f"🏆 S&P500 등락 상위/하위\n  불러오기 실패: {e}"

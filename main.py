@@ -2,6 +2,7 @@
 
 import random
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from stock import get_stock_summary
 from news import get_news_summary
@@ -29,7 +30,7 @@ QUOTES = [
 
 
 def build_message() -> str:
-    now = datetime.now()
+    now = datetime.now(ZoneInfo("Asia/Seoul"))
     date_str = f"{now.year}년 {now.month}월 {now.day}일 {WEEKDAYS[now.weekday()]}"
     quote = random.choice(QUOTES)
 
